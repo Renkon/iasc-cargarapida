@@ -24,11 +24,6 @@ defmodule User do
     {:reply, password, state}
   end
 
-  #@impl true
-  #def handle_cast({:register_socket, socket_pid}, state) do
-  #  {:noreply, %{state | socket_pid: socket_pid}}
-  #end
-
   @impl true
   def handle_cast({:register_socket, socket_pid}, state) do
     new_state = %{state | socket_pid: socket_pid}
