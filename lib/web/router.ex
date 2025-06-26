@@ -55,6 +55,23 @@ defmodule Router do
     else
       _ -> send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON"}))
     end
+
+    #TODO: trigger existing notifications
+  end
+
+  get "/reservation" do
+    send_resp(conn, 200, "pong")#
+    #TODO: is this needed or just the alerts is ok?
+  end
+
+  post "/reservation" do
+    send_resp(conn, 200, "pong")#
+    #TODO: assign user to charging point
+  end
+
+  post "/alert" do
+    send_resp(conn, 200, "pong")#
+    #TODO
   end
 
   match _ do
