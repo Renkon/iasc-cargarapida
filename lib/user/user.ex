@@ -6,8 +6,6 @@ defmodule User do
     GenServer.start_link(__MODULE__, user, name: via_tuple(username))
   end
 
-  #@impl true
-  #def init(user), do: {:ok, user}
   @impl true
   def init(%User{username: username} = user) do
     case CargaRapida.UserAgent.get_user(username) do

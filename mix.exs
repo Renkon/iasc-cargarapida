@@ -24,7 +24,8 @@ defmodule IascCargarapida.MixProject do
     [
       {:libcluster, "~> 3.5"},
       {:horde, "~> 0.9.1"},
-      {:plug_cowboy, "~> 2.7.4"}
+      {:plug_cowboy, "~> 2.7.4"},
+      {:uuid, "~> 1.1.8"}
     ]
   end
 end
