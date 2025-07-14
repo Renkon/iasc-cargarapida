@@ -1,21 +1,21 @@
 defmodule CargaRapida.StationManager do
-  def create_timeslot(types_with_power, datetime_str, station, duration_min) do
-    {:ok, datetime, _offset} = DateTime.from_iso8601(datetime_str)
-    offer_endtime = DateTime.add(DateTime.utc_now(), round(duration_min * 60), :second)
+  def create_timeslot(types_with_power, start_time_str, station, duration_min) do
+    {:ok, start_time, _offset} = DateTime.from_iso8601(start_time_str)
+    end_time = DateTime.add(start_time, round(duration_min * 60), :second)
 
     Enum.map(types_with_power, fn {type, kw} ->
       id = UUID.uuid4()
 
-      case CargaRapida.ChargingPointSupervisor.create(id, datetime, station, offer_endtime, type, kw) do
+      case CargaRapida.ChargingPointSupervisor.create(id, start_time, station, end_time, type, kw) do
         {:ok, _pid} ->
           payload = %{
             id: id,
             type: type,
             power: kw,
-            datetime: datetime_str,
+            start_time: DateTime.to_iso8601(start_time),
             station: station,
             duration_min: duration_min,
-            offer_endtime: DateTime.to_iso8601(offer_endtime)
+            end_time: DateTime.to_iso8601(end_time)
           }
 
           notify_alerted_users(type, kw, station, payload)

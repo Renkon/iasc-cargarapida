@@ -1,16 +1,16 @@
 defmodule ChargingPoint do
   use GenServer
-  defstruct [:id, :datetime, :station, :offer_endtime, :type, :power, :assigned_user]
+  defstruct [:id, :start_time, :station, :end_time, :type, :power, :assigned_user]
 
   def start_link(%ChargingPoint{id: id} = charging_point) do
     GenServer.start_link(__MODULE__, charging_point, name: via_tuple(id))
   end
 
   @impl true
-  def init(%ChargingPoint{id: id, offer_endtime: offer_endtime} = charging_point) do
+  def init(%ChargingPoint{id: id, end_time: end_time} = charging_point) do
     now = DateTime.utc_now()
     ms_until_expire =
-      case DateTime.diff(offer_endtime, now, :millisecond) do
+      case DateTime.diff(end_time, now, :millisecond) do
         diff when diff > 0 -> diff
         _ -> 0
       end
