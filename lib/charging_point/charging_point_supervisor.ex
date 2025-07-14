@@ -21,9 +21,10 @@ defmodule CargaRapida.ChargingPointSupervisor do
     Horde.DynamicSupervisor.start_child(__MODULE__, child_spec)
   end
 
+
   def assign_user(charging_point_id, username) do
     case Horde.Registry.lookup(CargaRapida.ChargingPointRegistry, charging_point_id) do
-      [{pid, _}] -> GenServer.cast(pid, {:assign_user, username})
+      [{pid, _}] -> GenServer.call(pid, {:assign_user, username})
       _ -> :error
     end
   end

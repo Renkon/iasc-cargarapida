@@ -1,15 +1,14 @@
 defmodule Alert do
   use GenServer
-  defstruct [:id, :userid, :chargingpointid]
+  defstruct [:id, :user_id, :type, :min_power, :station]
 
-  def start_link(alert) do
-    id = UUID.uuid4()
-    GenServer.start_link(__MODULE__, alert, name: via_tuple(id))
+  def start_link(%Alert{} = alert) do
+    GenServer.start_link(__MODULE__, alert, name: via_tuple(alert.id))
   end
 
   @impl true
-  def init(%Alert{id: id} = alert) do
-    CargaRapida.AlertAgent.put_alert(id, alert)
+  def init(alert) do
+    CargaRapida.AlertAgent.put_alert(alert.id, alert)
     {:ok, alert}
   end
 
