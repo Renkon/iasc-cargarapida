@@ -65,15 +65,15 @@ defmodule Router do
   end
 
   post "/reservation" do
-    with {:ok, %{"user_id" => user_id, "reservation_id" => reservation_id}} <- parse_json_body(conn),
-        :ok <- CargaRapida.ChargingPointSupervisor.assign_user(reservation_id, user_id) do
+    with {:ok, %{"user_id" => user_id, "charging_point_id" => charging_point_id}} <- parse_json_body(conn),
+        :ok <- CargaRapida.ChargingPointSupervisor.assign_user(charging_point_id, user_id) do
       send_resp(conn, 200, Jason.encode!(%{status: "assigned"}))
     else
       {:error, :already_reserved, existing_user} ->
         send_resp(conn, 409, Jason.encode!(%{error: "already_reserved", by: existing_user}))
 
       :error ->
-        send_resp(conn, 404, Jason.encode!(%{error: "reservation_not_found"}))
+        send_resp(conn, 404, Jason.encode!(%{error: "charging_point_not_found"}))
 
       _ ->
         send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON or request"}))
