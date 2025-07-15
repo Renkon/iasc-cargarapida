@@ -1,6 +1,11 @@
 defmodule Router do
   use Plug.Router
 
+  plug Plug.Parsers,
+    parsers: [:urlencoded, :json],
+    pass: ["*/*"],
+    json_decoder: Jason
+
   plug :match
   plug :set_default_content_type
   plug :dispatch
@@ -10,7 +15,7 @@ defmodule Router do
   end
 
   post "/signup" do
-    with {:ok, %{"username" => username, "password" => password}} <- parse_json_body(conn) do
+    with %{"username" => username, "password" => password} <- conn.params do
       case CargaRapida.UserSupervisor.create(username, password) do
         {:ok, _pid} ->
           send_resp(conn, 201, Jason.encode!(%{result: "User created"}))
@@ -20,12 +25,12 @@ defmodule Router do
           send_resp(conn, 500, Jason.encode!(%{error: inspect(reason)}))
       end
     else
-      _ -> send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON"}))
+      _ -> send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON: missing username or password"}))
     end
   end
 
   post "/login" do
-    with {:ok, %{"username" => username, "password" => password}} <- parse_json_body(conn) do
+    with %{"username" => username, "password" => password} <- conn.params do
       case Horde.Registry.lookup(CargaRapida.UserRegistry, username) do
         [{pid, _value}] ->
           case GenServer.call(pid, :get_password) do
@@ -36,46 +41,42 @@ defmodule Router do
           send_resp(conn, 401, Jason.encode!(%{error: "Invalid username"}))
       end
     else
-      _ -> send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON"}))
+      _ -> send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON: missing username or password"}))
     end
   end
 
   post "/timeslot" do
-    with {:ok, %{
-            "types_with_power" => types_with_power,
-            "datetime" => datetime_str,
-            "station" => station,
-            "duration_min" => duration_min
-          }} <- parse_json_body(conn) do
+    with %{
+           "types_with_power" => types_with_power,
+           "datetime" => datetime_str,
+           "station" => station,
+           "duration_min" => duration_min
+         } <- conn.params do
       types_with_power =
         Enum.map(types_with_power, fn %{"type" => type, "power" => power} -> {String.to_atom(type), power} end)
 
       result = CargaRapida.StationManager.create_timeslot(types_with_power, datetime_str, String.to_atom(station), duration_min)
       send_resp(conn, 201, Jason.encode!(%{result: result}))
     else
-      _ -> send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON"}))
+      _ -> send_resp(conn, 400, Jason.encode!(%{error: "Invalid or incomplete JSON"}))
     end
-
-    #TODO: trigger existing notifications
   end
 
   get "/matching_timeslots" do
     user_id = conn.params["user_id"]
-    IO.puts(user_id)
-    IO.puts(conn.params)
 
     if user_id do
       alerts = CargaRapida.AlertAgent.user_alerts(user_id)
       results = CargaRapida.ChargingPointAgent.matching_charging_points_multiple(alerts)
       send_resp(conn, 200, Jason.encode!(results))
     else
-      send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON"}))
+      send_resp(conn, 400, Jason.encode!(%{error: "Missing user_id query parameter"}))
     end
   end
 
   post "/reservation" do
-    with {:ok, %{"user_id" => user_id, "charging_point_id" => charging_point_id}} <- parse_json_body(conn),
-        :ok <- CargaRapida.ChargingPointSupervisor.assign_user(charging_point_id, user_id) do
+    with %{"user_id" => user_id, "charging_point_id" => charging_point_id} <- conn.params,
+         :ok <- CargaRapida.ChargingPointSupervisor.assign_user(charging_point_id, user_id) do
       send_resp(conn, 200, Jason.encode!(%{status: "assigned"}))
     else
       {:error, :already_reserved, existing_user} ->
@@ -90,15 +91,15 @@ defmodule Router do
   end
 
   post "/alert" do
-    with {:ok, %{
-            "user_id" => user_id,
-            "start_time" => start_time_str,
-            "end_time" => end_time_str,
-            "type" => type,
-            "min_power" => min_power,
-            "station" => station
-          }} <- parse_json_body(conn),
-        result <- CargaRapida.AlertSupervisor.create_alert(user_id, type, min_power, station, start_time_str, end_time_str) do
+    with %{
+           "user_id" => user_id,
+           "start_time" => start_time_str,
+           "end_time" => end_time_str,
+           "type" => type,
+           "min_power" => min_power,
+           "station" => station
+         } <- conn.params,
+         result <- CargaRapida.AlertSupervisor.create_alert(user_id, type, min_power, station, start_time_str, end_time_str) do
       case result do
         {:ok, alert_id} ->
           send_resp(conn, 201, Jason.encode!(%{id: alert_id}))
@@ -106,7 +107,7 @@ defmodule Router do
           send_resp(conn, 500, Jason.encode!(%{error: inspect(reason)}))
       end
     else
-      _ -> send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON"}))
+      _ -> send_resp(conn, 400, Jason.encode!(%{error: "Invalid or incomplete JSON"}))
     end
   end
 
@@ -126,14 +127,5 @@ defmodule Router do
 
   defp set_default_content_type(conn, _opts) do
     Plug.Conn.put_resp_content_type(conn, "application/json")
-  end
-
-  defp parse_json_body(conn) do
-    with {:ok, body, _conn} <- Plug.Conn.read_body(conn),
-         {:ok, params} <- Jason.decode(body) do
-      {:ok, params}
-    else
-      _ -> :error
-    end
   end
 end
