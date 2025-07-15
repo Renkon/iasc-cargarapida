@@ -61,6 +61,10 @@ defmodule CargaRapida.BaseAgent do
         :rpc.call(node, __MODULE__, :all_entries, [])
       end
 
+      def get_all() do
+        Agent.get(__MODULE__, & &1)
+      end
+
       defp deep_merge_entries(map1, map2) do
         Map.merge(map1, map2, fn _k, v1, v2 ->
           if Map.get(v1, @timestamp_key, 0) > Map.get(v2, @timestamp_key, 0), do: v1, else: v2

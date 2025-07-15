@@ -14,7 +14,6 @@ defmodule CargaRapida.StationManager do
             power: kw,
             start_time: DateTime.to_iso8601(start_time),
             station: station,
-            duration_min: duration_min,
             end_time: DateTime.to_iso8601(end_time)
           }
 
@@ -45,10 +44,42 @@ defmodule CargaRapida.StationManager do
     end)
   end
 
-  defp notify_alerted_users(start_time, type, power, station, payload) do
+  def get_charger_types do
+    [:CCS, :CHAdeMO, :Tipo2, :Tipo1, :Tesla]
+  end
+
+  def get_stations do
+    [:Campus, :Medrano, :Obelisco]
+  end
+
+  def notify_alerted_users(start_time, type, power, station, payload) do
     alerts = CargaRapida.AlertAgent.matching_alerts(start_time, type, power, station)
 
     Enum.each(alerts, fn %Alert{user_id: user_id} ->
+      notify_user(user_id, payload)
+    end)
+  end
+
+  def notify_matching_existing_charging_points(alert, user_id) do
+    charging_points = CargaRapida.ChargingPointAgent.matching_charging_points(alert)
+
+    Enum.each(charging_points, fn %ChargingPoint{
+      id: id,
+      type: type,
+      power: power,
+      start_time: start_time,
+      station: station,
+      end_time: end_time
+    } ->
+      payload = %{
+        id: id,
+        type: type,
+        power: power,
+        start_time: start_time,
+        station: station,
+        end_time: end_time
+      }
+
       notify_user(user_id, payload)
     end)
   end

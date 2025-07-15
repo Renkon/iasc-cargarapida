@@ -80,27 +80,36 @@ defmodule Router do
     end
   end
 
-post "/alert" do
-  with {:ok, %{
-          "user_id" => user_id,
-          "start_time" => start_time_str,
-          "end_time" => end_time_str,
-          "type" => type,
-          "min_power" => min_power,
-          "station" => station
-        }} <- parse_json_body(conn),
-       result <- CargaRapida.AlertSupervisor.create_alerts(user_id, type, min_power, station, start_time_str, end_time_str) do
-    case result do
-      {:ok, alert_id} ->
-        send_resp(conn, 201, Jason.encode!(%{status: "alert_created", id: alert_id}))
-      {:error, reason} ->
-        send_resp(conn, 500, Jason.encode!(%{error: inspect(reason)}))
+  post "/alert" do
+    with {:ok, %{
+            "user_id" => user_id,
+            "start_time" => start_time_str,
+            "end_time" => end_time_str,
+            "type" => type,
+            "min_power" => min_power,
+            "station" => station
+          }} <- parse_json_body(conn),
+        result <- CargaRapida.AlertSupervisor.create_alert(user_id, type, min_power, station, start_time_str, end_time_str) do
+      case result do
+        {:ok, alert_id} ->
+          send_resp(conn, 201, Jason.encode!(%{id: alert_id}))
+        {:error, reason} ->
+          send_resp(conn, 500, Jason.encode!(%{error: inspect(reason)}))
+      end
+    else
+      _ -> send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON"}))
     end
-  else
-    _ -> send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON"}))
   end
-end
 
+  get "/stations" do
+    stations = CargaRapida.StationManager.get_stations()
+    send_resp(conn, 200, Jason.encode!(stations))
+  end
+
+  get "/charger_types" do
+    charger_types = CargaRapida.StationManager.get_charger_types()
+    send_resp(conn, 200, Jason.encode!(charger_types))
+  end
 
   match _ do
     send_resp(conn, 404, Jason.encode!(%{error: "Not found"}))

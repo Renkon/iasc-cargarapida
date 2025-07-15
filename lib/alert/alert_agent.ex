@@ -13,11 +13,11 @@ defmodule CargaRapida.AlertAgent do
     get_all()
     |> Enum.map(fn {_id, alert} -> alert end)
     |> Enum.filter(fn alert ->
-      alert.start_time == start_time and alert.type == type and alert.min_power <= power and alert.station == station
+      DateTime.compare(start_time, alert.start_time) != :lt and
+      DateTime.compare(start_time, alert.end_time) != :gt and
+      alert.type == type and
+      alert.min_power <= power and
+      alert.station == station
     end)
-  end
-
-  def get_all() do
-    Agent.get(__MODULE__, & &1)
   end
 end

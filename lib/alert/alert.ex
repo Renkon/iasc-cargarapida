@@ -9,7 +9,22 @@ defmodule Alert do
   @impl true
   def init(alert) do
     CargaRapida.AlertAgent.put_alert(alert.id, alert)
+
+    now = DateTime.utc_now()
+    ms_until_expire =
+      case DateTime.diff(alert.end_time, now, :millisecond) do
+        diff when diff > 0 -> diff
+        _ -> 0
+      end
+
+    Process.send_after(self(), :expire, ms_until_expire)
     {:ok, alert}
+  end
+
+  @impl true
+  def handle_info(:expire, alert) do
+    CargaRapida.AlertAgent.delete_entry(alert.id)
+    {:stop, :normal, alert}
   end
 
   defp via_tuple(id) do

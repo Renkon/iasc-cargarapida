@@ -1,7 +1,7 @@
 defmodule CargaRapida.AlertSupervisor do
   use CargaRapida.BaseHordeSupervisor
 
-  def create_alerts(user_id, type, min_power, station, start_time_str, end_time_str) do
+  def create_alert(user_id, type, min_power, station, start_time_str, end_time_str) do
     {:ok, start_time, _offset} = DateTime.from_iso8601(start_time_str)
     {:ok, end_time, _offset} = DateTime.from_iso8601(end_time_str)
 
@@ -16,10 +16,13 @@ defmodule CargaRapida.AlertSupervisor do
       station: String.to_atom(station)
     }
 
-    case Horde.DynamicSupervisor.start_child(__MODULE__, {Alert, alert}) do
-    {:ok, _pid} -> {:ok, alert_id}
-    {:error, reason} -> {:error, reason}
-    other -> {:error, other}
-  end
+    result = case Horde.DynamicSupervisor.start_child(__MODULE__, {Alert, alert}) do
+      {:ok, _pid} -> {:ok, alert_id}
+      {:error, reason} -> {:error, reason}
+      other -> {:error, other}
+    end
+
+    CargaRapida.StationManager.notify_matching_existing_charging_points(alert, user_id)
+    result
   end
 end
