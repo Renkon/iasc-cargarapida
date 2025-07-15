@@ -22,6 +22,9 @@ defmodule CargaRapida.Application do
       {CargaRapida.ChargingPointRegistry, [keys: :unique, members: :auto]},
       {CargaRapida.ChargingPointSupervisor, [strategy: :one_for_one, distribution_strategy: Horde.UniformQuorumDistribution, process_redistribution: :active]},
       {CargaRapida.ChargingPointAgent, []},
+      {CargaRapida.AlertRegistry, [keys: :unique, members: :auto]},
+      {CargaRapida.AlertSupervisor, [strategy: :one_for_one, distribution_strategy: Horde.UniformQuorumDistribution, process_redistribution: :active]},
+      {CargaRapida.AlertAgent, []},
       {Plug.Cowboy, scheme: :http, plug: Router, options: [port: port, dispatch: dispatch()]},
     ]
 
