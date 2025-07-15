@@ -4,7 +4,7 @@ defmodule CargaRapida.Application do
 
   @node_prefix "cargarapida"
   @node_host "127.0.0.1"
-  @node_count 3
+  @node_count 4
 
   @node_names for i <- 1..@node_count, do: :"#{@node_prefix}#{i}@#{@node_host}"
 
