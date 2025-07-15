@@ -24,4 +24,21 @@ defmodule CargaRapida.ChargingPointAgent do
       cp.station == alert_station
     end)
   end
+
+  def matching_charging_points_multiple(alerts) do
+    alerts
+      |> Enum.flat_map(fn alert ->
+        CargaRapida.ChargingPointAgent.matching_charging_points(alert)
+        |> Enum.map(fn cp ->
+          %{
+            id: cp.id,
+            type: cp.type,
+            power: cp.power,
+            start_time: cp.start_time,
+            station: cp.station,
+            end_time: cp.end_time
+          }
+        end)
+    end)
+  end
 end

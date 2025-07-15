@@ -59,9 +59,18 @@ defmodule Router do
     #TODO: trigger existing notifications
   end
 
-  get "/reservation" do
-    send_resp(conn, 200, "pong")#
-    #TODO: is this needed or just the alerts is ok?
+  get "/matching_timeslots" do
+    user_id = conn.params["user_id"]
+    IO.puts(user_id)
+    IO.puts(conn.params)
+
+    if user_id do
+      alerts = CargaRapida.AlertAgent.user_alerts(user_id)
+      results = CargaRapida.ChargingPointAgent.matching_charging_points_multiple(alerts)
+      send_resp(conn, 200, Jason.encode!(results))
+    else
+      send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON"}))
+    end
   end
 
   post "/reservation" do

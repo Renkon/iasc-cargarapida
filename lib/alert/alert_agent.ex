@@ -20,4 +20,10 @@ defmodule CargaRapida.AlertAgent do
       alert.station == station
     end)
   end
+
+  def user_alerts(user_id) do
+    get_all()
+    |> Enum.map(fn {_id, alert} -> alert end)
+    |> Enum.filter(fn alert -> alert.user_id == user_id end)
+  end
 end
