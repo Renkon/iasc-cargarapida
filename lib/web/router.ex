@@ -88,9 +88,14 @@ post "/alert" do
           "type" => type,
           "min_power" => min_power,
           "station" => station
-        }} <- parse_json_body(conn) do
-    alert_ids = CargaRapida.AlertSupervisor.create_alerts(user_id, type, min_power, station, start_time_str, end_time_str)
-    send_resp(conn, 201, Jason.encode!(%{status: "alerts_created", ids: alert_ids}))
+        }} <- parse_json_body(conn),
+       result <- CargaRapida.AlertSupervisor.create_alerts(user_id, type, min_power, station, start_time_str, end_time_str) do
+    case result do
+      {:ok, alert_id} ->
+        send_resp(conn, 201, Jason.encode!(%{status: "alert_created", id: alert_id}))
+      {:error, reason} ->
+        send_resp(conn, 500, Jason.encode!(%{error: inspect(reason)}))
+    end
   else
     _ -> send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON"}))
   end
