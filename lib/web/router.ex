@@ -74,6 +74,17 @@ defmodule Router do
     end
   end
 
+  get "/assigned_timeslots" do
+    user_id = conn.params["user_id"]
+
+    if user_id do
+      results = CargaRapida.ChargingPointAgent.get_charging_points_by_user(user_id)
+      send_resp(conn, 200, Jason.encode!(results))
+    else
+      send_resp(conn, 400, Jason.encode!(%{error: "Missing user_id query parameter"}))
+    end
+  end
+
   post "/reservation" do
     with %{"user_id" => user_id, "charging_point_id" => charging_point_id} <- conn.params,
          :ok <- CargaRapida.ChargingPointSupervisor.assign_user(charging_point_id, user_id) do

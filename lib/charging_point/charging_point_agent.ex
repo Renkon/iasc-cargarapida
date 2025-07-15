@@ -21,7 +21,8 @@ defmodule CargaRapida.ChargingPointAgent do
       DateTime.compare(cp.start_time, alert_end) != :gt and
       cp.type == alert_type and
       cp.power >= alert_min_power and
-      cp.station == alert_station
+      cp.station == alert_station and
+      cp.assigned_user == nil
     end)
   end
 
@@ -36,9 +37,23 @@ defmodule CargaRapida.ChargingPointAgent do
             power: cp.power,
             start_time: cp.start_time,
             station: cp.station,
-            end_time: cp.end_time
           }
         end)
+    end)
+  end
+
+  def get_charging_points_by_user(user_id) do
+    get_all()
+    |> Enum.map(fn {_id, cp} -> cp end)
+    |> Enum.filter(fn cp -> cp.assigned_user == user_id end)
+    |> Enum.map(fn cp ->
+      %{
+        id: cp.id,
+        type: cp.type,
+        power: cp.power,
+        start_time: cp.start_time,
+        station: cp.station,
+      }
     end)
   end
 end
