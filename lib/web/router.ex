@@ -83,25 +83,14 @@ defmodule Router do
 post "/alert" do
   with {:ok, %{
           "user_id" => user_id,
+          "start_time" => start_time_str,
+          "end_time" => end_time_str,
           "type" => type,
           "min_power" => min_power,
           "station" => station
         }} <- parse_json_body(conn) do
-    id = UUID.uuid4()
-    alert = %Alert{
-      id: id,
-      user_id: user_id,
-      type: String.to_atom(type),
-      min_power: min_power,
-      station: String.to_atom(station)
-    }
-
-    case Horde.DynamicSupervisor.start_child(CargaRapida.AlertSupervisor, {Alert, alert}) do
-      {:ok, _pid} ->
-        send_resp(conn, 201, Jason.encode!(%{status: "alert_created", id: id}))
-      {:error, reason} ->
-        send_resp(conn, 500, Jason.encode!(%{error: "failed_to_create_alert", reason: inspect(reason)}))
-    end
+    alert_ids = CargaRapida.AlertSupervisor.create_alerts(user_id, type, min_power, station, start_time_str, end_time_str)
+    send_resp(conn, 201, Jason.encode!(%{status: "alerts_created", ids: alert_ids}))
   else
     _ -> send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON"}))
   end

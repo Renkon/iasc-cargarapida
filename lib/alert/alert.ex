@@ -1,6 +1,6 @@
 defmodule Alert do
   use GenServer
-  defstruct [:id, :user_id, :type, :min_power, :station]
+  defstruct [:id, :start_time, :end_time, :user_id, :type, :min_power, :station]
 
   def start_link(%Alert{} = alert) do
     GenServer.start_link(__MODULE__, alert, name: via_tuple(alert.id))

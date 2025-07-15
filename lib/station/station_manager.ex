@@ -18,7 +18,7 @@ defmodule CargaRapida.StationManager do
             end_time: DateTime.to_iso8601(end_time)
           }
 
-          notify_alerted_users(type, kw, station, payload)
+          notify_alerted_users(start_time, type, kw, station, payload)
 
           Map.put(payload, :status, "ok")
 
@@ -45,8 +45,8 @@ defmodule CargaRapida.StationManager do
     end)
   end
 
-  defp notify_alerted_users(type, power, station, payload) do
-    alerts = CargaRapida.AlertAgent.matching_alerts(type, power, station)
+  defp notify_alerted_users(start_time, type, power, station, payload) do
+    alerts = CargaRapida.AlertAgent.matching_alerts(start_time, type, power, station)
 
     Enum.each(alerts, fn %Alert{user_id: user_id} ->
       notify_user(user_id, payload)

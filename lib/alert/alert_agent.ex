@@ -9,11 +9,11 @@ defmodule CargaRapida.AlertAgent do
     delete_entry(id)
   end
 
-  def matching_alerts(type, power, station) do
+  def matching_alerts(start_time, type, power, station) do
     get_all()
     |> Enum.map(fn {_id, alert} -> alert end)
     |> Enum.filter(fn alert ->
-      alert.type == type and alert.min_power <= power and alert.station == station
+      alert.start_time == start_time and alert.type == type and alert.min_power <= power and alert.station == station
     end)
   end
 
