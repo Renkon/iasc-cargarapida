@@ -25,7 +25,7 @@ defmodule CargaRapida.ChargingPointSupervisor do
   def assign_user(charging_point_id, username) do
     case Horde.Registry.lookup(CargaRapida.ChargingPointRegistry, charging_point_id) do
       [{pid, _}] -> GenServer.call(pid, {:assign_user, username})
-      _ -> :error
+      _ -> {:error, :invalid_charging_point_id}
     end
   end
 end
