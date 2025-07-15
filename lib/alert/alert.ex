@@ -27,6 +27,12 @@ defmodule Alert do
     {:stop, :normal, alert}
   end
 
+  @impl true
+  def terminate(reason, state) do
+    CargaRapida.AlertAgent.delete_alert(state.id)
+    reason
+  end
+
   defp via_tuple(id) do
     {:via, Horde.Registry, {CargaRapida.AlertRegistry, id}}
   end

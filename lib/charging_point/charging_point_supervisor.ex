@@ -1,12 +1,12 @@
 defmodule CargaRapida.ChargingPointSupervisor do
   use CargaRapida.BaseHordeSupervisor
 
-  def create(id, start_time, station, end_time, type, power) do
+  def create(id, start_time, station, death_time, type, power) do
     charging_point = %ChargingPoint{
       id: id,
       start_time: start_time,
       station: station,
-      end_time: end_time,
+      death_time: death_time,
       type: type,
       power: power,
       assigned_user: nil
