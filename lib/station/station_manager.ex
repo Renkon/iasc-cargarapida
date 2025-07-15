@@ -14,8 +14,7 @@ defmodule CargaRapida.StationManager do
             type: type,
             power: kw,
             start_time: DateTime.to_iso8601(start_time),
-            station: station,
-            death_time: DateTime.to_iso8601(death_time)
+            station: station
           }
 
           notify_alerted_users(start_time, type, kw, station, payload)
@@ -69,16 +68,14 @@ defmodule CargaRapida.StationManager do
       type: type,
       power: power,
       start_time: start_time,
-      station: station,
-      end_time: end_time
+      station: station
     } ->
       payload = %{
         id: id,
         type: type,
         power: power,
         start_time: start_time,
-        station: station,
-        end_time: end_time
+        station: station
       }
 
       notify_user(user_id, payload)

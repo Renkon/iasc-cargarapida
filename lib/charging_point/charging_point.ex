@@ -30,7 +30,7 @@ defmodule ChargingPoint do
     new_death_time = DateTime.add(state.start_time, 30 * 60, :second) # Extend by 30 minutes
     ms_until_expire = ms_until_expire(new_death_time)
     timer_ref = Process.send_after(self(), :expire, ms_until_expire)
-    new_state = %{state | assigned_user: username, death_time: new_death_time, timer: timer}
+    new_state = %{state | assigned_user: username, death_time: new_death_time, timer: timer_ref}
     CargaRapida.ChargingPointAgent.put_charging_point(state.id, new_state)
     {:reply, :ok, new_state}
   end
