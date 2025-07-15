@@ -106,24 +106,47 @@ defmodule Router do
     end
   end
 
-  post "/reservation" do
-  with %{"user_id" => user_id, "charging_point_id" => charging_point_id} <- conn.params,
-       # Validate user exists
-       {:user_exists, true} <- {:user_exists, not is_nil(CargaRapida.UserAgent.get_entry(user_id))},
-       :ok <- CargaRapida.ChargingPointSupervisor.assign_user(charging_point_id, user_id)
-  do
-    send_resp(conn, 200, Jason.encode!(%{status: "assigned"}))
-  else
-    {:user_exists, false} ->
-      send_resp(conn, 404, Jason.encode!(%{error: "User does not exist"}))
-    {:error, :already_reserved, existing_user} ->
-      send_resp(conn, 409, Jason.encode!(%{error: "already_reserved", by: existing_user}))
-    {:error, :invalid_charging_point_id} ->
-      send_resp(conn, 404, Jason.encode!(%{error: "Invalid charging point ID"}))
-    _ ->
-      send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON or request"}))
+  get "/charging_point_available" do
+    ids = conn.params["ids"]
+
+    # Support a single id (?ids=1), a comma-separated list (?ids=1,2),
+    # and a list of params (?ids[]=1&ids[]=2).
+    id_list =
+      cond do
+        is_list(ids) -> ids
+        is_binary(ids) -> String.split(ids, ",")
+        true -> []
+      end
+      # Filter out any empty strings that might result from trailing commas or empty params.
+      |> Enum.reject(&(&1 == ""))
+
+    results =
+      Enum.map(id_list, fn id ->
+        available = CargaRapida.ChargingPointSupervisor.is_available(id)
+        %{charging_point_id: id, available: available}
+      end)
+
+    send_resp(conn, 200, Jason.encode!(results))
   end
-end
+
+  post "/reservation" do
+    with %{"user_id" => user_id, "charging_point_id" => charging_point_id} <- conn.params,
+        # Validate user exists
+        {:user_exists, true} <- {:user_exists, not is_nil(CargaRapida.UserAgent.get_entry(user_id))},
+        :ok <- CargaRapida.ChargingPointSupervisor.assign_user(charging_point_id, user_id)
+    do
+      send_resp(conn, 200, Jason.encode!(%{status: "assigned"}))
+    else
+      {:user_exists, false} ->
+        send_resp(conn, 404, Jason.encode!(%{error: "User does not exist"}))
+      {:error, :already_reserved, existing_user} ->
+        send_resp(conn, 409, Jason.encode!(%{error: "already_reserved", by: existing_user}))
+      {:error, :invalid_charging_point_id} ->
+        send_resp(conn, 404, Jason.encode!(%{error: "Invalid charging point ID"}))
+      _ ->
+        send_resp(conn, 400, Jason.encode!(%{error: "Invalid JSON or request"}))
+    end
+  end
 
   post "/alert" do
     with %{
