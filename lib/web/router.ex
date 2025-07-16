@@ -45,6 +45,11 @@ defmodule Router do
     end
   end
 
+  get "/charging_points" do
+    charging_points = CargaRapida.ChargingPointAgent.get_all_charging_points()
+    send_resp(conn, 200, Jason.encode!(charging_points))
+  end
+
   post "/timeslot" do
     with %{
           "types_with_power" => types_with_power,

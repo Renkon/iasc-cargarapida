@@ -56,4 +56,19 @@ defmodule CargaRapida.ChargingPointAgent do
       }
     end)
   end
+
+  def get_all_charging_points do
+    get_all()
+    |> Enum.map(fn {_id, cp} -> cp end)
+    |> Enum.map(fn cp ->
+      %{
+        id: cp.id,
+        type: cp.type,
+        power: cp.power,
+        start_time: cp.start_time,
+        station: cp.station,
+        assigned_user: cp.assigned_user
+      }
+    end)
+  end
 end
