@@ -23,19 +23,35 @@ Configuration for nginx:
 
 ```conf
 upstream backend {
-    server 192.168.1.106:4000 max_fails=1 fail_timeout=2s;
-    server 192.168.1.106:4001 max_fails=1 fail_timeout=2s;
-    server 192.168.1.106:4002 max_fails=1 fail_timeout=2s;
-    server 192.168.1.106:4003 max_fails=1 fail_timeout=2s;
+    server 192.168.1.106:4000 max_fails=1 fail_timeout=30s;
+    server 192.168.1.106:4001 max_fails=1 fail_timeout=30s;
+    server 192.168.1.106:4002 max_fails=1 fail_timeout=30s;
+    server 192.168.1.106:4003 max_fails=1 fail_timeout=30s;
 }
 
 server {
-    listen 8080;
+    listen 4100;
 
     location / {
+        # Manejo de OPTIONS (preflight CORS)
+        if ($request_method = OPTIONS) {
+            add_header 'Access-Control-Allow-Origin' '*' always;
+            add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE' always;
+            add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization' always;
+            add_header 'Access-Control-Max-Age' 1728000 always;
+            add_header 'Content-Length' 0;
+            add_header 'Content-Type' 'text/plain; charset=UTF-8';
+            return 204;
+        }
+
+        # Headers para todas las demás requests
+        add_header 'Access-Control-Allow-Origin' '*' always;
+        add_header 'Access-Control-Allow-Methods' 'GET, POST, OPTIONS, PUT, DELETE' always;
+        add_header 'Access-Control-Allow-Headers' 'Content-Type, Authorization' always;
+
         proxy_pass http://backend;
         proxy_next_upstream error timeout invalid_header http_500 http_502 http_503 http_504;
-        proxy_next_upstream_tries 3;
+        proxy_next_upstream_tries 4;
 
         proxy_connect_timeout 100ms;
         proxy_read_timeout 300ms;
@@ -45,6 +61,26 @@ server {
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /ws {
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+
+        proxy_next_upstream error timeout invalid_header http_502 http_503 http_504;
+        proxy_next_upstream_tries 4;
+
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+
+        proxy_connect_timeout 300ms;
+        proxy_read_timeout 7d;
+        proxy_send_timeout 7d;
+
+        proxy_pass http://backend;
     }
 }
 ```
