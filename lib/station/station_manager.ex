@@ -92,22 +92,23 @@ defmodule CargaRapida.StationManager do
     end
   end
 
-  defp notify_all_users_charging_point_created(payload) do
-    msg = Jason.encode!(%{type: "created_charging_point", data: payload})
-
-    user_ids = Horde.Registry.select(CargaRapida.UserRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
-    for user_id <- user_ids do
-      case Horde.Registry.lookup(CargaRapida.UserRegistry, user_id) do
-        [{pid, _}] -> GenServer.cast(pid, {:send_ws, msg})
-        _ -> :ok
-      end
-    end
+  def notify_all_users_charging_point_created(payload) do
+    notify_all_users("created_charging_point", payload)
   end
 
   def notify_all_users_charging_point_assigned(id) do
-    msg = Jason.encode!(%{type: "assigned_charging_point", data: %{id: id}})
+    notify_all_users("assigned_charging_point", %{id: id})
+  end
+
+  def notify_all_users_charging_point_deleted(id) do
+    notify_all_users("deleted_charging_point", %{id: id})
+  end
+
+  defp notify_all_users(type, data) do
+    msg = Jason.encode!(%{type: type, data: data})
 
     user_ids = Horde.Registry.select(CargaRapida.UserRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
+
     for user_id <- user_ids do
       case Horde.Registry.lookup(CargaRapida.UserRegistry, user_id) do
         [{pid, _}] -> GenServer.cast(pid, {:send_ws, msg})

@@ -49,6 +49,7 @@ defmodule ChargingPoint do
   @impl true
   def terminate(reason, state) do
     CargaRapida.ChargingPointAgent.delete_charging_point(state.id)
+    CargaRapida.StationManager.notify_all_users_charging_point_deleted(state.id)
     reason
   end
 
