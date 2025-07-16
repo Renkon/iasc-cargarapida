@@ -26,4 +26,18 @@ defmodule CargaRapida.AlertAgent do
     |> Enum.map(fn {_id, alert} -> alert end)
     |> Enum.filter(fn alert -> alert.user_id == user_id end)
   end
+
+  def user_alerts_for_router(user_id) do
+    user_alerts(user_id)
+    |> Enum.map(fn alert ->
+      %{
+        id: alert.id,
+        type: alert.type,
+        min_power: alert.min_power,
+        start_time: alert.start_time,
+        end_time: alert.end_time,
+        station: alert.station
+      }
+    end)
+  end
 end

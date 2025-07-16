@@ -153,6 +153,23 @@ defmodule Router do
     end
   end
 
+  get "/alerts" do
+    user_id = conn.params["user_id"]
+
+    if user_id do
+      case CargaRapida.UserAgent.get_entry(user_id) do
+        nil ->
+          send_resp(conn, 404, Jason.encode!(%{error: "User does not exist"}))
+
+        _user ->
+          alerts = CargaRapida.AlertAgent.user_alerts_for_router(user_id)
+          send_resp(conn, 200, Jason.encode!(alerts))
+      end
+    else
+      send_resp(conn, 400, Jason.encode!(%{error: "Missing user_id query parameter"}))
+    end
+  end
+
   post "/alert" do
     with %{
           "user_id" => user_id,
