@@ -111,26 +111,8 @@ defmodule Router do
     end
   end
 
-  get "/charging_point_available" do
-    ids = conn.params["ids"]
-
-    # Support a single id (?ids=1), a comma-separated list (?ids=1,2),
-    # and a list of params (?ids[]=1&ids[]=2).
-    id_list =
-      cond do
-        is_list(ids) -> ids
-        is_binary(ids) -> String.split(ids, ",")
-        true -> []
-      end
-      # Filter out any empty strings that might result from trailing commas or empty params.
-      |> Enum.reject(&(&1 == ""))
-
-    results =
-      Enum.map(id_list, fn id ->
-        available = CargaRapida.ChargingPointSupervisor.is_available(id)
-        %{charging_point_id: id, available: available}
-      end)
-
+  get "/unassigned_timeslots" do
+    results = CargaRapida.ChargingPointAgent.get_all_charging_points_unassigned()
     send_resp(conn, 200, Jason.encode!(results))
   end
 

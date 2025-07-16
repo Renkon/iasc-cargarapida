@@ -18,6 +18,7 @@ defmodule CargaRapida.StationManager do
           }
 
           notify_alerted_users(start_time, type, kw, station, payload)
+          notify_all_users_charging_point_created(payload)
 
           Map.put(payload, :status, "ok")
 
@@ -56,7 +57,7 @@ defmodule CargaRapida.StationManager do
     alerts = CargaRapida.AlertAgent.matching_alerts(start_time, type, power, station)
 
     Enum.each(alerts, fn %Alert{user_id: user_id} ->
-      notify_user(user_id, payload)
+      notify_user_alert_hit(user_id, payload)
     end)
   end
 
@@ -78,16 +79,40 @@ defmodule CargaRapida.StationManager do
         station: station
       }
 
-      notify_user(user_id, payload)
+      notify_user_alert_hit(user_id, payload)
     end)
   end
 
-  defp notify_user(user_id, payload) do
+  defp notify_user_alert_hit(user_id, payload) do
     case Horde.Registry.lookup(CargaRapida.UserRegistry, user_id) do
       [{pid, _}] ->
-        GenServer.cast(pid, {:send_ws, Jason.encode!(%{type: "alert", data: payload})})
+        GenServer.cast(pid, {:send_ws, Jason.encode!(%{type: "alert_hit", data: payload})})
 
       _ -> :ok
+    end
+  end
+
+  defp notify_all_users_charging_point_created(payload) do
+    msg = Jason.encode!(%{type: "created_charging_point", data: payload})
+
+    user_ids = Horde.Registry.select(CargaRapida.UserRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
+    for user_id <- user_ids do
+      case Horde.Registry.lookup(CargaRapida.UserRegistry, user_id) do
+        [{pid, _}] -> GenServer.cast(pid, {:send_ws, msg})
+        _ -> :ok
+      end
+    end
+  end
+
+  def notify_all_users_charging_point_assigned(id) do
+    msg = Jason.encode!(%{type: "assigned_charging_point", data: %{id: id}})
+
+    user_ids = Horde.Registry.select(CargaRapida.UserRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
+    for user_id <- user_ids do
+      case Horde.Registry.lookup(CargaRapida.UserRegistry, user_id) do
+        [{pid, _}] -> GenServer.cast(pid, {:send_ws, msg})
+        _ -> :ok
+      end
     end
   end
 end

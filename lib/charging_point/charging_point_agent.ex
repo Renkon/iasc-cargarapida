@@ -71,4 +71,8 @@ defmodule CargaRapida.ChargingPointAgent do
       }
     end)
   end
+
+  def get_all_charging_points_unassigned do
+    get_charging_points_by_user(nil)
+  end
 end
