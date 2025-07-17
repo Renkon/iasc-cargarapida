@@ -101,16 +101,15 @@ defmodule CargaRapida.StationManager do
     type: type,
     power: power,
     start_time: start_time,
-    station: station,
-    assigned_user: user
-  }) do
+    station: station
+  }, username) do
     payload = %{
         id: id,
         type: type,
         power: power,
         start_time: start_time,
         station: station,
-        user: user
+        user: username
       }
     notify_all_users("assigned_charging_point", payload)
   end
