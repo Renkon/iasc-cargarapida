@@ -84,3 +84,11 @@ server {
     }
 }
 ```
+## Diagramas
+### Arquitectura
+<img width="500" alt="diseño" src="https://github.com/user-attachments/assets/f67d4297-4569-4ab3-9a1c-6d50f7ddd2e6" />
+
+### Secuencia Login
+<img width="750" alt="login" src="https://github.com/user-attachments/assets/9096b902-f080-496c-82c1-ae53a538d1f3" />
+
+
