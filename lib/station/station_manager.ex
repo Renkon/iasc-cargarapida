@@ -101,7 +101,7 @@ defmodule CargaRapida.StationManager do
     type: type,
     power: power,
     start_time: start_time,
-    station: station
+    station: station,
     assigned_user: user
   }) do
     payload = %{
