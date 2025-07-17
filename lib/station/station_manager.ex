@@ -104,16 +104,23 @@ defmodule CargaRapida.StationManager do
     notify_all_users("deleted_charging_point", %{id: id})
   end
 
+  def ping_all_users() do
+    "ping"
+    |> broadcast_message()
+  end
+
   defp notify_all_users(type, data) do
-    msg = Jason.encode!(%{type: type, data: data})
+    %{type: type, data: data}
+    |> Jason.encode!()
+    |> broadcast_message()
+  end
 
-    user_ids = Horde.Registry.select(CargaRapida.UserRegistry, [{{:"$1", :_, :_}, [], [:"$1"]}])
+  defp broadcast_message(msg) do
+    match_spec = [{{:_, :"$1", :_}, [], [:"$1"]}]
+    pids = Horde.Registry.select(CargaRapida.UserRegistry, match_spec)
 
-    for user_id <- user_ids do
-      case Horde.Registry.lookup(CargaRapida.UserRegistry, user_id) do
-        [{pid, _}] -> GenServer.cast(pid, {:send_ws, msg})
-        _ -> :ok
-      end
+    for pid <- pids do
+      GenServer.cast(pid, {:send_ws, msg})
     end
   end
 end

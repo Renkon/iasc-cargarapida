@@ -13,19 +13,25 @@ defmodule UserSocketHandler do
 
   # Handle incoming websocket messages from client
   def websocket_handle({:text, msg}, state) do
-    # Expecting JSON like {"user": "foo"}
-    case Jason.decode(msg) do
-      {:ok, %{"user" => username}} ->
-        # Register this websocket PID in the User process
-        case Horde.Registry.lookup(CargaRapida.UserRegistry, username) do
-          [{pid, _}] ->
-            GenServer.cast(pid, {:register_socket, self()})
-            {:reply, {:text, "registered"}, Map.put(state, :user, username)}
-          _ ->
-            {:reply, {:text, "user not found"}, state}
-        end
+    case msg do
+      "pong" ->
+        {:ok, state}
+
       _ ->
-        {:reply, {:text, "invalid"}, state}
+        # Expecting JSON like {"user": "foo"}
+        case Jason.decode(msg) do
+          {:ok, %{"user" => username}} ->
+            # Register this websocket PID in the User process
+            case Horde.Registry.lookup(CargaRapida.UserRegistry, username) do
+              [{pid, _}] ->
+                GenServer.cast(pid, {:register_socket, self()})
+                {:reply, {:text, "registered"}, Map.put(state, :user, username)}
+              _ ->
+                {:reply, {:text, "user not found"}, state}
+            end
+          _ ->
+            {:reply, {:text, "invalid"}, state}
+        end
     end
   end
 

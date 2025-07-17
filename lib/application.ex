@@ -26,6 +26,7 @@ defmodule CargaRapida.Application do
       {CargaRapida.AlertSupervisor, [strategy: :one_for_one, distribution_strategy: Horde.UniformQuorumDistribution, process_redistribution: :active]},
       {CargaRapida.AlertAgent, []},
       {Plug.Cowboy, scheme: :http, plug: Router, options: [port: port, dispatch: dispatch()]},
+      {CargaRapida.SocketPinger, []},
     ]
 
     opts = [strategy: :one_for_one, name: CargaRapida.GeneralSupervisor]
