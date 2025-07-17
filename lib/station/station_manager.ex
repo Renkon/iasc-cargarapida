@@ -96,8 +96,21 @@ defmodule CargaRapida.StationManager do
     notify_all_users("created_charging_point", payload)
   end
 
-  def notify_all_users_charging_point_assigned(id) do
-    notify_all_users("assigned_charging_point", %{id: id})
+  def notify_all_users_charging_point_assigned(%ChargingPoint{
+    id: id,
+    type: type,
+    power: power,
+    start_time: start_time,
+    station: station
+  }) do
+    payload = %{
+        id: id,
+        type: type,
+        power: power,
+        start_time: start_time,
+        station: station
+      }
+    notify_all_users("assigned_charging_point", payload)
   end
 
   def notify_all_users_charging_point_deleted(id) do
