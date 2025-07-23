@@ -91,7 +91,10 @@ server {
 ```
 ## Diagramas
 ### Arquitectura
-<img width="500" alt="diseño" src="https://github.com/user-attachments/assets/f67d4297-4569-4ab3-9a1c-6d50f7ddd2e6" />
+<img width="500" alt="Diagrama" src="https://github.com/user-attachments/assets/a3ea2a6e-5c63-46dd-b5c0-36d77366a8f6" />
+
+
+
 
 ### Secuencia Login
 <img width="600" alt="login" src="https://github.com/user-attachments/assets/9096b902-f080-496c-82c1-ae53a538d1f3" />
