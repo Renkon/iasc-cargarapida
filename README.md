@@ -94,5 +94,8 @@ server {
 ### Secuencia Alerta
 <img width="700" alt="alerta" src="https://github.com/user-attachments/assets/a25cfa26-564a-44da-a41b-b28e08c24150" />
 
+### First approach
+<img width="900" alt="Arquitectura - Carga Rapida drawio" src="https://github.com/user-attachments/assets/004929c3-17c0-4376-99d7-2e72e039f546" />
+
 
 
